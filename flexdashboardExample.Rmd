@@ -6,7 +6,7 @@ output:
   flexdashboard::flex_dashboard:
     orientation: columns
     css: state_stats.css
-    runtime: shiny
+runtime: shiny
 ---
 
 

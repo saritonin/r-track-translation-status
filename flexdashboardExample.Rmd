@@ -1,0 +1,154 @@
+---
+title: "State Stats"
+author: Sarah Lauser
+date: March 31, 2023
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    css: state_stats.css
+    runtime: shiny
+---
+
+
+```{r global, include=FALSE}
+################################################################################
+### libraries and data preparation
+################################################################################
+library(tidyverse)
+library(flexdashboard)
+library(datasets)
+library(usmap)
+data(state)
+
+# store the data in a tibble for easier plotting later
+stateStats <- as_tibble(state.x77, rownames="stateName")
+
+#-------------------------------------------------------------------------------
+# create some ancillary metadata to go with the dataset
+#-------------------------------------------------------------------------------
+state.x77labels = matrix(1:(length(colnames(state.x77))*3),ncol=3)
+
+rownames(state.x77labels) <- colnames(state.x77)
+# "Population" 
+# "Income"     
+# "Illiteracy" 
+# "Life Exp"   
+# "Murder"     
+# "HS Grad"    
+# "Frost"      
+# "Area"  
+
+colnames(state.x77labels) <- c("order","units","description")
+
+state.x77labels[,"units"] <- c("thousand people",
+                               "dollars (1974)",
+                               "%",
+                               "years",
+                               "per 100,000 people",
+                               "%", 
+                               "days below freezing each year",
+                               "sq mi")
+
+state.x77labels[,"description"] <- c(
+      "population estimate as of July 1, 1975",
+      "per capita income (1974)",
+      "illiteracy (1970, percent of population)",
+      "life expectancy in years (1969-71)",
+      "murder and non-negligent manslaughter rate per 100,000 population (1976)",
+      "percent high-school graduates (1970)",
+      "mean number of days with minimum temperature below freezing (1931-1960) in capital or large city",
+      "land area in square miles")
+
+state.x77notesHTML <- c("R Code:<br />
+                        <code>library(datasets)<br />
+                        data(state)<br />
+                        state.x77</code>",
+                        "Original Data Sources:<br />
+                        <ul>
+                        <li>U.S. Department of Commerce, Bureau of the Census (1977) 
+                        <cite>Statistical Abstract of the United States.</cite></li>
+                        <li>U.S. Department of Commerce, Bureau of the Census (1977)
+                        <cite>County and City Data Book.</cite></li>
+                        </ul>")
+```
+
+Column {.sidebar}
+-----------------------------------------------------------------------
+### Parameters
+```{r}
+selectInput("selState", label="State:", choices=rownames(state.x77), 
+            selected="Alabama")
+selectInput("selDetail", label="Comparison Graph:",choices=colnames(state.x77),
+            selected="Population")
+```
+
+### Dataset Notes
+```{r}
+HTML(paste0(state.x77notesHTML,sep="<br /><br />"))
+```
+
+Column {.main_content}
+-----------------------------------------------------------------------
+### Statistics for the state of {data-height=100}
+```{r}
+renderText({
+  input$selState
+})
+```
+
+### Map {data-height=400}
+```{r}
+renderPlot({
+plot_usmap(data=data.frame("state"=rownames(state.x77),
+                           "values"=ifelse(rownames(state.x77)==input$selState,1,0))) + 
+  scale_fill_continuous(low="white",high="red")+
+  theme(legend.position="none")
+})
+```
+
+### All statistics {data-height=400}
+```{r}
+renderTable({
+stateStats %>% 
+  filter(stateName == input$selState) %>% 
+  pivot_longer(cols=(!stateName), names_to = "statistic", values_to="value", values_transform=list(value = as.character)) %>%
+  left_join(as.tibble(state.x77labels, rownames="statistic")) %>%
+  select(statistic,value,units)
+})
+```
+
+Column {.state_comparison}
+-----------------------------------------------------------------------
+
+### 50 States Comparison
+
+```{r, fig.width=5, fig.height=12 }
+renderPlot({
+  currState  <- input$selState
+  currDetail <- input$selDetail
+
+  rankValue   <- rank(-1*state.x77[,currDetail], ties="first")[currState]
+  rankSuffix  <- switch(rankValue%%10,"st","nd","rd")
+  rankOrdinal <- paste0(rankValue,
+                      ifelse(is.null(rankSuffix)|(rankValue>10&rankValue<13),"th",
+                             rankSuffix))
+  
+  rankText <- paste(currState, "ranks", rankOrdinal, "for", currDetail)
+  ggplot(stateStats, aes(x=get(currDetail), y=reorder(stateName, get(currDetail)))) +
+    geom_point(size = 3) +
+    geom_point(data=stateStats[stateStats$stateName==input$selState,], 
+               aes(x=get(currDetail),y=stateName), 
+               color='red',
+               size=5)+
+    labs(x=state.x77labels[currDetail,"units"], y="State", 
+         title=currDetail, subtitle=rankText, caption=state.x77labels[currDetail,"description"])+
+    theme_bw(base_size = 20) + 
+    theme(
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank(),
+      panel.grid.major.y = element_line(colour = "grey60", linetype = "dashed"),
+      plot.title.position = "plot",
+    )
+})  
+```
+

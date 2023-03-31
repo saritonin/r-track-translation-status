@@ -1,0 +1,15 @@
+.section.sidebar {
+  top: 61px;
+  background-color: lightyellow
+}
+
+#section-statistics-for-the-state-of {
+  /* mimic the look of a valueBox because I couldn't get it to work with Shiny */
+  background-color: rgb(3,152,252);
+  color: white;
+  font-size: 38px;
+  font-weight: bold;
+  margin: 0 0 3px 0;
+  white-space: nowrap;
+  padding: 0;
+}

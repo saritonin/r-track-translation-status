@@ -1,0 +1,5 @@
+"language_code","language_name","message_source","file_name","countA","countT","countF","countU","pctDone","pctUnfuzzy"
+"de","German","R","R-de.po",2,2,1,0,100,50
+"de","German","src","de.po",1,0,0,1,0,0
+"it","Italian","R","R-it.po",2,1,0,1,50,50
+"it","Italian","src","it.po",1,0,0,1,0,0

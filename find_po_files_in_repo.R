@@ -62,6 +62,56 @@ library(jsonlite)
 # repoList
 # 
 # repos <- GET("https://api.github.com/users/r-devel")
+#-------------------------------------------------------------------------------
+# GraphQL queries
+#-------------------------------------------------------------------------------
+# query listTypes {
+#   __schema {
+#     types {
+#       name
+#       kind
+#       description
+#       fields {
+#         name
+#       }
+#     }
+#   }
+# }
+# 
+# query listFields {
+#   __type(name: "Blob") {
+#     name
+#     kind
+#     description
+#     fields {
+#       name
+#     }
+#   }
+# }
+# 
+# query checkType {
+#   node(
+#     id: "MDQ6QmxvYjI1NTU5MjI0OTpjZGZmNTkxNTMwN2FmMjcxMDE3OTI4NTEyZDZkZTQ1OTE3OGNjYTk4"
+#   ) {
+#     __typename
+#   }
+# }
+# 
+# query getBlobDetails {
+#   node(
+#     id: "B_kwDODzwHOdoAKGNkZmY1OTE1MzA3YWYyNzEwMTc5Mjg1MTJkNmRlNDU5MTc4Y2NhOTg"
+#   ) {
+#     ... on Blob {
+#       commitUrl
+#       id
+#       repository {
+#         id
+#         description
+#       }
+#     }
+#   }
+# }
+
 
 
 #-------------------------------------------------------------------------------

@@ -51,34 +51,37 @@ if (msgCountA == 0) {
 language_list <- c("de", "it") # test using target languages of German and Italian
 tmp_podir <- file.path(tmp_pkg, "po")
 all_lang_file_data <- NULL
-lang_file_status <- data.frame(language=character(),
+lang_file_status <- data.frame(language_code=character(),
+                               language_name=character(),
                                lang_file_name=character(),
+                               lang_file_path=character(),
                                countA=integer(),
                                countT=integer(),
                                countF=integer(),
                                stringsAsFactors=FALSE)
 
-for (language in language_list) {
-  file_names <- c(glue("R-{language}.po"), glue("{language}.po"))
+for (language_code in language_list) {
+  file_names <- c(glue("R-{language_code}.po"), glue("{language_code}.po"))
   for (lang_file_name in file_names) {
-    message_source = ifelse((lang_file_name == glue("R-{language}.po")),'R','src')
+    message_source = ifelse((lang_file_name == glue("R-{language_code}.po")),'R','src')
     lang_file <- file.path(tmp_podir,lang_file_name)
     if (file.exists(lang_file)) {
       lang_file_data <- get_po_messages(lang_file)
-      lang_file_data$language <- language
+      lang_file_data$language_code <- language_code
       lang_file_data$file <- lang_file_name
       all_lang_file_data <<- rbind(all_lang_file_data, lang_file_data)
     }
     
     #TODO: get the language names programatically. for now, hardcode
-    language_name <- ifelse((language == "de"),"German","Italian")
+    language_name <- ifelse((language_code == "de"),"German","Italian")
     
     #TODO: get the matched and fuzzy counts. for now, just fake it
-    matched_messages <- ifelse((language == "de" & message_source == 'R'),2,
-                               ifelse((language == "it" & message_source == 'R'),1,0))
-    fuzzy_messages <- ifelse((language == "de" & message_source == 'R'),1,0)
+    matched_messages <- ifelse((language_code == "de" & message_source == 'R'),2,
+                               ifelse((language_code == "it" & message_source == 'R'),1,0))
+    fuzzy_messages <- ifelse((language_code == "de" & message_source == 'R'),1,0)
     
-    new_row <- list(language = language, 
+    new_row <- list(language_code = language_code,
+                    language_name = language_name,
                     message_source = message_source,
                     file_name = lang_file_name,
                     countA = ifelse((message_source == 'R'),msgCountA_R,msgCountA_src), 

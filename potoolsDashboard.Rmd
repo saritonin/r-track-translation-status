@@ -1,0 +1,77 @@
+---
+title: "Language Leaderboard Proof-of-Concept"
+author: Sarah Lauser
+date: April 3, 2023
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    css: state_stats.css
+runtime: shiny
+---
+
+
+```{r setup, include=FALSE}
+################################################################################
+### libraries and data preparation
+################################################################################
+library(tidyverse)
+library(flexdashboard)
+
+# load the data
+languageData <- read.csv(file.path(here::here(),'data/lang_file_status.csv'))
+
+```
+
+Column {.sidebar}
+-----------------------------------------------------------------------
+### Parameters
+```{r}
+selectInput("selLang", label="Language Code:", choices=unique(languageData$language_code))
+```
+
+### Dataset Notes
+```{r}
+HTML('This is test data generated for proof-of-concept purposes.')
+```
+
+Column {.main_content}
+-----------------------------------------------------------------------
+### Coverage graph
+```{r, fig.width=5, fig.height=12 }
+renderPlot({
+  currLang  <- input$selLang
+  
+  ggplot(languageData[languageData$language_code == input$selLang,], 
+         aes(x=pctDone, y=reorder(file_name, pctDone))) +
+    geom_point(size = 3, color = "grey60") +
+    geom_segment(aes(yend = file_name), xend = 0, colour = "grey60", size = 2) +
+    geom_point(data=languageData[languageData$language_code == input$selLang,], 
+                  aes(x=pctUnfuzzy, y=file_name), colour = "black", size = 3) +
+    geom_segment(data=languageData[languageData$language_code == input$selLang,], 
+                  aes(x=pctUnfuzzy, y=file_name, yend = file_name, xend = 0),
+                  colour = "black", size = 2) +
+    labs(x='% coverage', y='file', 
+         title=paste0('Translation coverage for ', 
+                      unique(languageData[languageData$language_code == input$selLang,"language_name"]),' (',
+                      input$selLang,')'),
+         caption="Black/bold lines indicate confidently completed translations.\n Grey lines indicate translations that are fuzzy and may require re-checking.")+
+    theme_bw(base_size = 20) + 
+    theme(
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank(),
+      panel.grid.major.y = element_line(colour = "grey60", linetype = "dashed"),
+      plot.title.position = "plot",
+      legend.position = "bottom",
+    )
+})  
+```
+
+### All statistics {data-height=400}
+```{r}
+renderTable({
+languageData %>% 
+  filter(language_code == input$selLang) %>% 
+  select(pctDone, countT, countU, countF, file_name)
+})
+```
+
